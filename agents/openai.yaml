@@ -1,0 +1,16 @@
+interface:
+  display_name: ImagePSD
+  short_description: Create quality PSDs with editable shapes, artwork and text
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+  default_prompt: Use $imagepsd to create a maximum-quality layered PSD with complete
+    independent assets, native editable shapes and real text, preserving visual fidelity.
+    Always assemble, validate and deliver the actual PSD; never stop after generating
+    assets.
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

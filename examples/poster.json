@@ -1,0 +1,65 @@
+{
+  "width": 1600,
+  "height": 2000,
+  "layers": [
+    {
+      "type": "group",
+      "name": "TEXT",
+      "children": [
+        {
+          "type": "text",
+          "name": "Title",
+          "text": "VERBENA DE VERANO",
+          "left": 120,
+          "top": 160,
+          "width": 1360,
+          "height": 180,
+          "fontFamily": "Arial",
+          "fontPostScriptName": "Arial-BoldMT",
+          "fontSize": 112,
+          "fontWeight": 700,
+          "lineHeight": 1.0,
+          "align": "center",
+          "color": "#ffffff"
+        },
+        {
+          "type": "text",
+          "name": "Date",
+          "text": "SÁBADO 26 DE JULIO - 22:00",
+          "left": 180,
+          "top": 1580,
+          "width": 1240,
+          "height": 90,
+          "fontFamily": "Arial",
+          "fontPostScriptName": "ArialMT",
+          "fontSize": 52,
+          "align": "center",
+          "color": "#ffffff"
+        },
+        {
+          "type": "text",
+          "name": "Location",
+          "text": "PLAZA DEL PUEBLO",
+          "left": 180,
+          "top": 1690,
+          "width": 1240,
+          "height": 90,
+          "fontFamily": "Arial",
+          "fontPostScriptName": "ArialMT",
+          "fontSize": 48,
+          "align": "center",
+          "color": "#ffffff"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "name": "BACKGROUND",
+      "path": "./assets/background.png",
+      "left": 0,
+      "top": 0,
+      "width": 1600,
+      "height": 2000
+    }
+  ]
+}

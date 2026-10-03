@@ -1,0 +1,14 @@
+{
+  "name": "image-to-psd-skill",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Build organized layered PSD files from generated image assets.",
+  "dependencies": {
+    "ag-psd": "^30.0.0",
+    "sharp": "^0.34.0"
+  },
+  "scripts": {
+    "build": "node scripts/build-psd.mjs"
+  }
+}
