@@ -15,9 +15,9 @@ Treat this contract as mandatory in every workflow below, including new artwork,
 
 Before generating assets, identify the usable PSD builder, planned canvas and output path. Read `references/manifest.md` and prepare the layer plan so the generated resources can actually be assembled. Continue through this full sequence without stopping after asset generation:
 
-1. Analyze the reference or creation brief; identify elements and plan the layer structure.
-2. Decide raster, native vector/shape, editable text and masks for every element; budget final raster resolution.
-3. Generate, extract or reconstruct complete independent assets, including reasonable hidden portions.
+1. Analyze the reference or creation brief; inventory semantic elements, editing actions and visual dependencies before deciding layer boundaries.
+2. Build the layer decomposition described below: assign pixel/effect ownership, choose raster, native vector/shape, editable text and masks, record occlusion edges and budget final raster resolution.
+3. Generate, extract or reconstruct complete independent assets in dependency order, including reasonable hidden portions of every lower layer.
 4. Create the PSD document with the planned dimensions; insert and position every asset.
 5. Reconstruct editable text; create native shapes/vector elements where appropriate.
 6. Configure masks, real alpha, independent owning effects and transparencies where appropriate.
@@ -85,15 +85,46 @@ Before generation, record the final canvas and each raster asset's intended pixe
 
 Keep original files and lossless RGBA/PNG intermediates. Avoid repeated resizing, lossy recompression and aggressive PSD-size optimization. Downsample only once when needed for final placement. The builder rejects raster enlargement and aspect-ratio distortion by default; use its explicit exception flags only when the user has authorized those operations.
 
-## Classify every element before asset generation
+## Decompose by editing intent and visual dependency
 
-Record each element's representation, final bounds, owning effects and occlusion dependencies. Use the classification for both master-image reconstruction and independently created designs:
+Do not equate a visible region, segmentation mask or noun in the prompt with a layer. A useful layer is the smallest **semantic editing unit** a designer is likely to move, hide, recolor, replace, restyle or edit independently without breaking another unit. Decompose before asset generation and record the result in `production.json`; compile it later into the builder manifest.
+
+### Build the decomposition plan
+
+1. **Inventory semantic units.** List the background planes, scenery, people/objects, text runs, geometric graphics, repeated items and effects visible in the master. Also list elements that continue behind others even when their hidden pixels are not visible. Treat a repeated set as separate units only when individual editing is useful; otherwise keep it as a named group or coherent raster.
+2. **Write the expected edit for each unit.** Examples: move the vehicle, replace the portrait, edit the title, recolor the route, hide the glow, or keep the painted crowd intact. If no plausible independent edit exists and separation would reduce fidelity, keep the elements together. If the user explicitly requested an item independently editable, that request overrides the default grouping.
+3. **Assign ownership.** Every visible pixel, native geometry, mask and effect must have one clear owner. A contact shadow or reflection normally moves with its object; ambient cast light may belong to the receiving surface; a route glow belongs with the route. Split an effect only when it has a useful independent control. Avoid both unowned pixels and duplicated pixels in a visible lower layer plus an upper cutout.
+4. **Record occlusion edges.** For each overlap, record `upper -> lower` and what must continue under the upper unit. The graph must be acyclic and consistent with sibling stack order. Use it to distinguish simple stacking from true reconstruction work: only lower units with hidden content need completion beneath an occluder.
+5. **Choose the representation and bake boundary.** Use native text and shapes when they preserve the appearance; use raster for photographic, organic or inseparable artwork. A group is organizational, not an editable asset. A mask defines visibility but does not repair missing lower content. Keep a coherent raster together when subdivision would invent detail, create seams or materially weaken fidelity; name and disclose that bake boundary rather than producing fake independence.
+6. **Plan derivation order.** Acquire the authoritative master first. Derive upper cutouts from source pixels where possible, then reconstruct affected lower units from front to back; assemble in the reverse visual dependency implied by the final stack. Reconstruct each hidden continuation on its owning lower asset, not on a catch-all repair layer unless that repair layer is itself the intended editable unit.
+
+For every planned unit, record: semantic id/name, parent group, representation, expected independent edit, source/derivation method, final bounds, owner of attached effects, upper/lower occlusion dependencies, completeness requirement, resolution/alpha requirement and acceptance test. Resolve ambiguity before generation when it changes which pixels must be created.
+
+### Decide whether to split or keep together
+
+Split two visual components when at least one of these is true:
+
+- the user asked to edit them independently;
+- they have different semantic roles, transforms, visibility, copy or style controls;
+- one occludes the other and the lower component must remain complete when the upper one moves;
+- one can be represented more faithfully as native text/shape while the other must remain raster;
+- separating an owning effect is necessary for a useful control and will not duplicate its appearance.
+
+Keep components together when all useful edits treat them as one unit, or when separation cannot preserve their interaction reliably—for example, painterly interwoven detail, complex translucency or an inseparable reflection. Prefer one honest, high-fidelity raster unit over many rectangular crops, duplicate composites or nominal layers that cannot survive a hide/move test. This does not permit merging elements the user explicitly required as independent without explaining the limitation and obtaining agreement.
+
+### Choose the layer representation
+
+Use the decomposition for both master-image reconstruction and independently created designs:
 
 - **Raster / ImageGen:** photographs, people, vehicles, realistic objects, complex illustrations, organic textures, scenery and artwork requiring visual generation. Preserve source pixels for faithful extraction; use the master as input for any reconstruction. Match light direction, illumination, perspective, scale, style, grading and detail across all assets. Avoid an unrelated set of generations that reads as a collage.
 - **Native shapes / paths:** lines, routes, arrows, circles, rectangles, frames, separators, map pins, flat backgrounds, geometric blocks and simple decorations. Build editable PSD shape layers through `type: "shape"` in [references/manifest.md](references/manifest.md). Reconstruct a source graphic with matching vector geometry/colors instead of generating it as an image when fidelity permits. Retain artistic raster treatments only when vectors cannot reproduce them faithfully, and explain the exception.
 - **Real text:** preserve every representable text element as a native PSD type layer with a matching raster display cache. Rasterize only an artistic treatment that cannot be reproduced as editable text; identify that limitation. A PNG label or SVG rendered into an ordinary image layer is not editable text or a native shape.
 
 A master image may include graphics/text for design exploration, but reconstruct their native layers and remove their baked-in copies from lower artwork. For a new composition, omit typography and simple overlay graphics from the generated base when that improves fidelity and separation; compose them natively without weakening the scene. Use original coordinates and the master as the visual guide. Keep REFERENCE hidden; never use the flattened master to cover incomplete editable layers.
+
+### Validate the plan before generating
+
+Walk the planned stack from front to back and ask for every unit: what changes when it is hidden, what becomes exposed when it moves, which lower asset supplies those pixels, and whether any effect moves with it. Then walk back to front and confirm each exposed lower unit is complete and independently owned. Reject the plan before generation if it contains an occlusion cycle, a requested edit with no owning layer, an effect duplicated across owners, a lower silhouette-shaped hole, a full-image layer intended to cover incomplete work, or a layer whose only distinction is its name.
 
 ## Fidelity first
 
@@ -108,7 +139,7 @@ Distinguish two tasks:
 
 Use this approach for integrated scenes, watercolor illustrations, realistic composites and cinematic maps, both new and existing. Separate independently editable objects without sacrificing the original scene's quality.
 
-1. Classify elements and budget raster resolution as above. Plan the canvas, composition, perspective, palette, lighting, major objects, layer stack and text areas. For a new integrated raster design, generate a single coherent illustration through the image-generation skill, preferably with no baked-in text/simple overlays and reserved typography space. For a purely geometric design, build the native composition directly without ImageGen. Respect the user's style and avoid-list. For an existing image, use that exact image. Do not substitute a flat schematic map for detailed terrain, or a plain wash for an integrated watercolor scene, merely because those are easier to assemble.
+1. Build and validate the semantic decomposition and budget raster resolution as above. Plan the canvas, composition, perspective, palette, lighting, major objects, layer stack and text areas. For a new integrated raster design, generate a single coherent illustration through the image-generation skill, preferably with no baked-in text/simple overlays and reserved typography space. For a purely geometric design, build the native composition directly without ImageGen. Respect the user's style and avoid-list. For an existing image, use that exact image. Do not substitute a flat schematic map for detailed terrain, or a plain wash for an integrated watercolor scene, merely because those are easier to assemble.
 2. Establish this global illustration as the authoritative visual reference. Add exact copy as editable text and simple graphics as native shapes separately when creating a new design. Do not require another approval when the user already authorized the complete creation workflow; proceed and preserve the selected design.
 3. Before extraction, record which lower elements each foreground object occludes (terrain, routes, borders, cords, patterns, shadows). Plan a complete asset for each independently editable lower element, including its hidden portions. Then extract each major foreground object from the reference using accurate segmentation/masks and available supported image-editing tools. Prefer an alpha mask applied to original pixels when supported. Preserve the whole object with genuine alpha and reasonable transparent margin; inspect all edges on light and dark backgrounds for white/black halos, clipping and contamination. Preserve geometry, coordinates, resolution, texture and illumination; inspect soft watercolor edges, cords, hair and translucent areas. Save transparent object assets. Do not regenerate a different object from a text-only prompt and call it an extraction. An image-generation extraction may redraw pixels: compare it against the source and disclose material changes; never claim original-pixel preservation without measuring it.
 4. On a lower copy of the source, remove the extracted object and reconstruct only its previously occluded background with source-referenced inpainting/image editing. Preserve all surrounding visible areas, camera angle and lighting. Use a precise local mask when the available tool supports one; otherwise use a tightly constrained source-image edit and verify its actual changed region. Do not assume prompt instructions guarantee unchanged pixels. If a valid mask and compositing tools are available, retain original pixels outside the repair area. Use the image-generation skill for generative edits; do not claim access to Photoshop Generative Fill or an explicit mask API unless actually available.
