@@ -15,6 +15,11 @@ NEXT = {
     'EXPORT': {'DONE', 'REPAIR'}, 'DONE': set(),
 }
 
+COHERENCE_EVIDENCE = (
+    'fitToFrame', 'actualPixels', 'physicalIntegration',
+    'lightColorFocus', 'materialEdges', 'shadowsReflections',
+)
+
 def digest(p):
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 
@@ -36,6 +41,15 @@ def completion(record, require_delivery=True):
             raise ValueError('Stale or missing technical/visual evidence: ' + key)
     if review.get('passed') is not True or any(not isinstance(review.get(k), str) or not review[k].strip() for k in ('visual', 'assets', 'editability')):
         raise ValueError('Actual visual, asset and editability reviews required')
+    coherence = review.get('photographicCoherence', {})
+    if coherence.get('passed') is not True or any(
+        not isinstance(coherence.get(key), str) or not coherence[key].strip()
+        for key in COHERENCE_EVIDENCE
+    ):
+        raise ValueError(
+            'Fit-to-frame, 100%, physical integration, light/color/focus, '
+            'material-edge and shadow/reflection evidence required'
+        )
     delivery = record.get('delivery', {})
     if require_delivery and (delivery.get('persisted') is not True or delivery.get('psdSha256') != hashes['psdSha256'] or not delivery.get('persistentId') or not delivery.get('downloadUrl')):
         raise ValueError('Verified persistent delivery required')

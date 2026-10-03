@@ -38,6 +38,8 @@ Require all applicable checks to pass on the **saved PSD**, not merely on source
 - Confirm text remains editable and shapes remain independent/native wherever technically possible. Disclose specific unsupported features; naming a raster layer “text” or “shape” is not editability.
 - Confirm important independent elements are not accidentally baked into the background, duplicated there, or concealed beneath a visible flattened master. Require a useful editing structure, never a single flattened image masquerading as a layered PSD.
 - Confirm complete movable objects and continuous lower surfaces/routes; moving or hiding an object must not expose artificial holes. Preserve existing fidelity, quality and reconstruction checks below.
+- Confirm the reopened PSD preserves the master's photographic coherence: framing, positions, proportions, perspective, support/contact points, occlusions, shadows, reflections, lighting, color response, sharpness, grain and depth of field. Reject floating or pasted-on objects.
+- Confirm the actual PSD preview was inspected both fit-to-frame and at 100%; the review must identify any scale/perspective drift, edge halo, missing contact shadow/reflection or inconsistent focus rather than relying on a thumbnail alone.
 - Inspect the actual reopened PSD render against the authoritative composition and correct visual/structural defects before delivery.
 - Confirm the saved final PSD is available to the user and include its download link in the final response. Local existence alone is not delivery.
 
@@ -125,6 +127,25 @@ A master image may include graphics/text for design exploration, but reconstruct
 ### Validate the plan before generating
 
 Walk the planned stack from front to back and ask for every unit: what changes when it is hidden, what becomes exposed when it moves, which lower asset supplies those pixels, and whether any effect moves with it. Then walk back to front and confirm each exposed lower unit is complete and independently owned. Reject the plan before generation if it contains an occlusion cycle, a requested edit with no owning layer, an effect duplicated across owners, a lower silhouette-shaped hole, a full-image layer intended to cover incomplete work, or a layer whose only distinction is its name.
+
+## Photographic coherence: the master is binding
+
+Treat the approved or source master as the binding scene model, not merely a style reference. Record its framing, camera/viewpoint, horizon and vanishing directions, object positions and proportions, depth order, support surfaces and contact points, light direction/size/softness, exposure, white balance, contrast, sharpness, grain and depth-of-field pattern. Preserve these constraints through extraction, reconstruction, assembly and repair. Do not improve an isolated asset in a way that makes the assembled scene less faithful.
+
+Prefer extracting every raster object from that same master. When hidden content or a damaged edge must be reconstructed, use the master as visual input and preserve the object's identity, pose, material, viewpoint, illumination and focus; never replace it with an unrelated text-only generation merely because it is cleaner. Independently generated assets remain appropriate for the existing modular workflow, but must be reconciled to the shared master before acceptance.
+
+### Physical integration and material-aware edges
+
+- Preserve credible support and contact: feet meet the floor, tires meet the road, products sit on the same plane, held objects meet hands, and overlapping objects retain the master's depth order. Maintain contact compression, local occlusion and perspective; no floating gaps or arbitrary overlaps.
+- Match light direction and apparent source size, shadow direction/softness/density, exposure, temperature, contrast, saturation, local sharpness, grain/noise and depth of field across assets. Preserve natural differences caused by material and distance instead of applying a uniform correction.
+- Treat edge structure by material. Preserve fine discontinuous detail for hair, fur, foliage and lettuce; transmission, refraction and partial alpha for glass; crisp specular transitions for polished metal; soft density falloff for smoke, mist and glow; and appropriate motion/focus softness where present. Do not apply one uniform feather radius, painted outline or decontamination color to every edge.
+- Separate contact/cast shadows and reflections when that yields useful control, but record their owner and receiving surface. Moving the object with its owning effects must preserve their relationship; hiding it must not leave duplicates behind. When an interaction is inseparable without visible damage, retain it in a coherent raster group and disclose that editability boundary.
+
+### Assembly comparison and targeted repair
+
+After reopening the PSD, compare its actual preview with the master twice: first fit-to-frame for composition, scale, perspective, depth and global light/color; then at 100% for masks, edge contamination, focus transitions, grain, contact shadows and reflections. Inspect important contact and overlap regions directly, not only the whole-frame view. A structurally valid PSD fails if an object appears cut out, pasted on, floating, differently photographed or sharper/blurrier than its depth permits.
+
+Record each failure against the responsible semantic asset ids and a specific cause such as mask edge, placement/scale, perspective, exposure/color, focus/grain, contact shadow, reflection or occlusion. In REPAIR, change only those assets, masks, positions or owning effects and their declared dependents; preserve accepted assets. Never use global blur, global grain, a color wash or a visible flattened master to conceal local integration defects. Reassemble, reopen and repeat both comparison scales for the affected regions.
 
 ## Fidelity first
 
@@ -222,12 +243,16 @@ For both new and existing designs, preserve the authoritative global reference a
 - Confirm simple graphics have native vector masks and editable fill/stroke metadata after PSD readback; a raster preview alone is insufficient.
 - Confirm the PSD dimensions match the planned canvas or authoritative source, unless the user requested resizing.
 - Compare the actual PSD preview against the authoritative global composition, not only against intermediate assets. For new artwork, also check the brief and avoid-list. Verify reconstructed lower layers by hiding the objects above them.
+- Inspect that comparison fit-to-frame and at 100%. At full composition scale verify framing, scale, perspective, physical support, depth order, light and color; at 100% verify material-specific edges, focus, grain, shadows, reflections and overlap/contact regions. Record evidence for both views.
+- Reject assets that look pasted on, float above their support, change the master's identity/viewpoint, or have inconsistent exposure, color temperature, contrast, sharpness, grain or depth of field. Respect intentional differences caused by material and depth.
+- Confirm shadows and reflections have exactly one intended owner, remain spatially related to the object and receiving surface, and neither disappear nor duplicate during hide/move tests.
 - Confirm no unexpected text was added.
 - Confirm text layers are separate from artwork layers.
 - Confirm transparent image assets have alpha and complete hidden-region coverage. Complete the hide, move and solo checks for each overlap; explicitly inspect continuity of routes and other extended elements.
 - Reopen the PSD and confirm foreground/background order and ordering inside every group (ag-psd readback arrays are bottom-to-top).
 - Confirm the original flattened image is hidden at the bottom and is not accidentally visible over reconstructed layers.
 - Confirm the output file exists and has a `.psd` extension.
+- If integration fails, repair only implicated semantic assets and dependents; do not use global blur or another whole-frame treatment to hide local defects.
 
 ## Implementation and compatibility
 
